@@ -3,7 +3,7 @@ name: Publish Windows installer
 on:
   push:
     branches: [main]
-    paths: [VERSION.txt, SHA256SUMS, 'installers/**']
+    paths: [VERSION.txt, SHA256SUMS, 'installers/**', '.github/workflows/publish.yml']
   workflow_dispatch:
 
 permissions:
@@ -29,6 +29,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          trap 'echo "::error title=Publication step failed::Command failed at line $LINENO: $BASH_COMMAND"' ERR
           version="$(tr -d '\r\n' < VERSION.txt)"
           [[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
           tag="v$version"
@@ -40,14 +41,22 @@ jobs:
           expected_size="$(stat -c %s "$installer")"
           test "$expected_size" -gt 0
           test "$expected_size" -le 268435456
-          if gh release view "$tag" --repo "$RELEASE_REPOSITORY" >/dev/null 2>&1; then
-            echo 'This version already has a release; increase VERSION.txt. Published installers are never overwritten.'
-            exit 1
+          if release="$(gh api "repos/$RELEASE_REPOSITORY/releases/tags/$tag" 2>/dev/null)"; then
+            if test "$(jq -r .draft <<< "$release")" != true; then
+              echo '::error::This version is already published; increase VERSION.txt. Published installers are never overwritten.'
+              exit 1
+            fi
+            echo 'Resuming verification of an existing draft; no assets will be overwritten.'
+          else
+            if ! creation="$(gh release create "$tag" "$installer" --repo "$RELEASE_REPOSITORY" --draft --title "OrthoVision $version" --notes-file RELEASE_NOTES.md --target "$GITHUB_SHA" 2>&1)"; then
+              echo "::error title=Release creation failed::${creation//$'\n'/'%0A'}"
+              exit 1
+            fi
+            release="$(gh api "repos/$RELEASE_REPOSITORY/releases/tags/$tag")"
           fi
-          gh release create "$tag" "$installer" --repo "$RELEASE_REPOSITORY" --draft --title "OrthoVision $version" --notes-file RELEASE_NOTES.md --target "$GITHUB_SHA"
-          release="$(gh api "repos/$RELEASE_REPOSITORY/releases/tags/$tag")"
           actual_hash="$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .digest' <<< "$release")"
           actual_size="$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .size' <<< "$release")"
+          echo "::notice::Uploaded SHA-256: $actual_hash; expected sha256:$expected_hash; uploaded size $actual_size; expected $expected_size"
           test "$actual_hash" = "sha256:$expected_hash"
           test "$actual_size" = "$expected_size"
           gh release edit "$tag" --repo "$RELEASE_REPOSITORY" --draft=false --latest
