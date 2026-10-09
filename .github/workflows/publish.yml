@@ -42,42 +42,51 @@ jobs:
           test "$expected_size" -gt 0
           test "$expected_size" -le 268435456
           releases="$(gh api "repos/$RELEASE_REPOSITORY/releases?per_page=100")"
-          release="$(jq -c --arg tag "$tag" '[.[] | select(.tag_name == $tag)] | sort_by(.id) | last // empty' <<< "$releases")"
-          if test -n "$release" && test -f REPLACE_RELEASE.txt; then
+          published="$(jq -c --arg tag "$tag" '[.[] | select(.tag_name == $tag and .draft == false)] | sort_by(.id) | last // empty' <<< "$releases")"
+          replace_id=''
+          if test -n "$published"; then
+            current_hash="$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .digest' <<< "$published")"
+            if test "$current_hash" != "sha256:$expected_hash"; then
+              test -f REPLACE_RELEASE.txt
             old_hash="$(tr -d '\r\n' < REPLACE_RELEASE.txt)"
             [[ "$old_hash" =~ ^[a-f0-9]{64}$ ]]
-            current_hash="$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .digest' <<< "$release")"
-            if test "$current_hash" != "sha256:$expected_hash"; then
-              test "$(jq -r .tag_name <<< "$release")" = "$tag"
-              test "$(jq '.assets | length' <<< "$release")" = 1
+              test "$(jq '.assets | length' <<< "$published")" = 1
               test "$current_hash" = "sha256:$old_hash"
-              release_id="$(jq -r .id <<< "$release")"
-              [[ "$release_id" =~ ^[0-9]+$ ]]
-              tag_ref="$(gh api "repos/$RELEASE_REPOSITORY/git/ref/tags/$tag")"
-              test "$(jq -r .ref <<< "$tag_ref")" = "refs/tags/$tag"
-              echo 'Replacing exactly the old release authorized by the submitted checksum. Existing installations of this version need manual reinstallation.'
-              gh api --method DELETE "repos/$RELEASE_REPOSITORY/releases/$release_id"
-              gh api --method DELETE "repos/$RELEASE_REPOSITORY/git/refs/tags/$tag"
-              release=''
+              replace_id="$(jq -r .id <<< "$published")"
+              [[ "$replace_id" =~ ^[0-9]+$ ]]
             fi
           fi
-          if test -n "$release"; then
-            echo 'Verifying existing release; assets will not be overwritten.'
-          else
-            if ! creation="$(gh release create "$tag" "$installer" --repo "$RELEASE_REPOSITORY" --draft --title "OrthoVision $version" --notes-file RELEASE_NOTES.md --target "$GITHUB_SHA" 2>&1)"; then
-              echo "::error title=Release creation failed::${creation//$'\n'/'%0A'}"
-              exit 1
-            fi
-            releases="$(gh api "repos/$RELEASE_REPOSITORY/releases?per_page=100")"
-            release="$(jq -c --arg tag "$tag" '[.[] | select(.tag_name == $tag)] | sort_by(.id) | last // empty' <<< "$releases")"
-            test -n "$release"
+          # Several drafts can share a tag. Reuse only an exact matching asset;
+          # never identify the upload or publication target by tag alone.
+          release="$(jq -c --arg tag "$tag" --arg name "$name" --arg hash "sha256:$expected_hash" --argjson size "$expected_size" '[.[] | select(.tag_name == $tag and any(.assets[]; .name == $name and .digest == $hash and .size == $size))] | sort_by(.id) | last // empty' <<< "$releases")"
+          if test -z "$release"; then
+            release="$(gh api --method POST "repos/$RELEASE_REPOSITORY/releases" -f tag_name="$tag" -f target_commitish="$GITHUB_SHA" -f name="OrthoVision $version" -F draft=true -F prerelease=false -f body="$(< RELEASE_NOTES.md)")"
+            release_id="$(jq -r .id <<< "$release")"
+            [[ "$release_id" =~ ^[0-9]+$ ]]
+            gh api --method POST "https://uploads.github.com/repos/$RELEASE_REPOSITORY/releases/$release_id/assets?name=$name" --input "$installer" -H 'Content-Type: application/octet-stream' --silent
+            release="$(gh api "repos/$RELEASE_REPOSITORY/releases/$release_id")"
           fi
+          release_id="$(jq -r .id <<< "$release")"
+          [[ "$release_id" =~ ^[0-9]+$ ]]
+          test "$(jq -r .tag_name <<< "$release")" = "$tag"
+          test "$(jq '.assets | length' <<< "$release")" = 1
           actual_hash="$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .digest' <<< "$release")"
           actual_size="$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .size' <<< "$release")"
           echo "::notice::Uploaded SHA-256: $actual_hash; expected sha256:$expected_hash; uploaded size $actual_size; expected $expected_size"
           test "$actual_hash" = "sha256:$expected_hash"
           test "$actual_size" = "$expected_size"
-          if test "$(jq -r .draft <<< "$release")" = true; then
-            gh release edit "$tag" --repo "$RELEASE_REPOSITORY" --draft=false --latest
+          # Only remove the old publication after the new uploaded asset passes.
+          if test -n "$replace_id"; then
+            tag_ref="$(gh api "repos/$RELEASE_REPOSITORY/git/ref/tags/$tag")"
+            test "$(jq -r .ref <<< "$tag_ref")" = "refs/tags/$tag"
+            echo 'Replacing exactly the old published release authorized by checksum.'
+            gh api --method DELETE "repos/$RELEASE_REPOSITORY/releases/$replace_id"
+            gh api --method DELETE "repos/$RELEASE_REPOSITORY/git/refs/tags/$tag"
           fi
+          if test "$(jq -r .draft <<< "$release")" = true; then
+            gh api --method PATCH "repos/$RELEASE_REPOSITORY/releases/$release_id" -F draft=false -f make_latest=true -f target_commitish="$GITHUB_SHA" --silent
+          fi
+          latest="$(gh api "repos/$RELEASE_REPOSITORY/releases/latest")"
+          test "$(jq -r .id <<< "$latest")" = "$release_id"
+          test "$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .digest' <<< "$latest")" = "sha256:$expected_hash"
           printf 'Published verified installer: https://github.com/%s/releases/tag/%s\n' "$RELEASE_REPOSITORY" "$tag" >> "$GITHUB_STEP_SUMMARY"
