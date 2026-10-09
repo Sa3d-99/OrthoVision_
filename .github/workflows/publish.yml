@@ -3,7 +3,7 @@ name: Publish Windows installer
 on:
   push:
     branches: [main]
-    paths: [VERSION.txt, SHA256SUMS, 'installers/**', '.github/workflows/publish.yml']
+    paths: [VERSION.txt, SHA256SUMS, 'OrthoVision-Setup-*.exe', '.github/workflows/publish.yml']
   workflow_dispatch:
 
 permissions:
@@ -34,7 +34,7 @@ jobs:
           [[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
           tag="v$version"
           name="OrthoVision-Setup-$version.exe"
-          installer="installers/$name"
+          installer="$name"
           test -f "$installer"
           sha256sum --check SHA256SUMS
           expected_hash="$(sha256sum "$installer" | cut -d ' ' -f 1)"
@@ -43,12 +43,26 @@ jobs:
           test "$expected_size" -le 268435456
           releases="$(gh api "repos/$RELEASE_REPOSITORY/releases?per_page=100")"
           release="$(jq -c --arg tag "$tag" '[.[] | select(.tag_name == $tag)] | sort_by(.id) | last // empty' <<< "$releases")"
-          if test -n "$release"; then
-            if test "$(jq -r .draft <<< "$release")" != true; then
-              echo '::error::This version is already published; increase VERSION.txt. Published installers are never overwritten.'
-              exit 1
+          if test -n "$release" && test -f REPLACE_RELEASE.txt; then
+            old_hash="$(tr -d '\r\n' < REPLACE_RELEASE.txt)"
+            [[ "$old_hash" =~ ^[a-f0-9]{64}$ ]]
+            current_hash="$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .digest' <<< "$release")"
+            if test "$current_hash" != "sha256:$expected_hash"; then
+              test "$(jq -r .tag_name <<< "$release")" = "$tag"
+              test "$(jq '.assets | length' <<< "$release")" = 1
+              test "$current_hash" = "sha256:$old_hash"
+              release_id="$(jq -r .id <<< "$release")"
+              [[ "$release_id" =~ ^[0-9]+$ ]]
+              tag_ref="$(gh api "repos/$RELEASE_REPOSITORY/git/ref/tags/$tag")"
+              test "$(jq -r .ref <<< "$tag_ref")" = "refs/tags/$tag"
+              echo 'Replacing exactly the old release authorized by the submitted checksum. Existing installations of this version need manual reinstallation.'
+              gh api --method DELETE "repos/$RELEASE_REPOSITORY/releases/$release_id"
+              gh api --method DELETE "repos/$RELEASE_REPOSITORY/git/refs/tags/$tag"
+              release=''
             fi
-            echo 'Resuming verification of an existing draft; no assets will be overwritten.'
+          fi
+          if test -n "$release"; then
+            echo 'Verifying existing release; assets will not be overwritten.'
           else
             if ! creation="$(gh release create "$tag" "$installer" --repo "$RELEASE_REPOSITORY" --draft --title "OrthoVision $version" --notes-file RELEASE_NOTES.md --target "$GITHUB_SHA" 2>&1)"; then
               echo "::error title=Release creation failed::${creation//$'\n'/'%0A'}"
@@ -63,5 +77,7 @@ jobs:
           echo "::notice::Uploaded SHA-256: $actual_hash; expected sha256:$expected_hash; uploaded size $actual_size; expected $expected_size"
           test "$actual_hash" = "sha256:$expected_hash"
           test "$actual_size" = "$expected_size"
-          gh release edit "$tag" --repo "$RELEASE_REPOSITORY" --draft=false --latest
+          if test "$(jq -r .draft <<< "$release")" = true; then
+            gh release edit "$tag" --repo "$RELEASE_REPOSITORY" --draft=false --latest
+          fi
           printf 'Published verified installer: https://github.com/%s/releases/tag/%s\n' "$RELEASE_REPOSITORY" "$tag" >> "$GITHUB_STEP_SUMMARY"
