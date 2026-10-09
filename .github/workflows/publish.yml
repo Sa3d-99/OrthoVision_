@@ -1,0 +1,54 @@
+name: Publish Windows installer
+
+on:
+  push:
+    branches: [main]
+    paths: [VERSION.txt, SHA256SUMS, 'installers/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-windows-installer
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'Sa3d-99/OrthoVision_'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Verify installer and publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(tr -d '\r\n' < VERSION.txt)"
+          [[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          tag="v$version"
+          name="OrthoVision-Setup-$version.exe"
+          installer="installers/$name"
+          test -f "$installer"
+          sha256sum --check SHA256SUMS
+          expected_hash="$(sha256sum "$installer" | cut -d ' ' -f 1)"
+          expected_size="$(stat -c %s "$installer")"
+          test "$expected_size" -gt 0
+          test "$expected_size" -le 268435456
+          if gh release view "$tag" --repo "$RELEASE_REPOSITORY" >/dev/null 2>&1; then
+            echo 'This version already has a release; increase VERSION.txt. Published installers are never overwritten.'
+            exit 1
+          fi
+          gh release create "$tag" "$installer" --repo "$RELEASE_REPOSITORY" --draft --title "OrthoVision $version" --notes-file RELEASE_NOTES.md --target "$GITHUB_SHA"
+          release="$(gh api "repos/$RELEASE_REPOSITORY/releases/tags/$tag")"
+          actual_hash="$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .digest' <<< "$release")"
+          actual_size="$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .size' <<< "$release")"
+          test "$actual_hash" = "sha256:$expected_hash"
+          test "$actual_size" = "$expected_size"
+          gh release edit "$tag" --repo "$RELEASE_REPOSITORY" --draft=false --latest
+          printf 'Published verified installer: https://github.com/%s/releases/tag/%s\n' "$RELEASE_REPOSITORY" "$tag" >> "$GITHUB_STEP_SUMMARY"
