@@ -41,7 +41,9 @@ jobs:
           expected_size="$(stat -c %s "$installer")"
           test "$expected_size" -gt 0
           test "$expected_size" -le 268435456
-          if release="$(gh api "repos/$RELEASE_REPOSITORY/releases/tags/$tag" 2>/dev/null)"; then
+          releases="$(gh api "repos/$RELEASE_REPOSITORY/releases?per_page=100")"
+          release="$(jq -c --arg tag "$tag" '[.[] | select(.tag_name == $tag)] | sort_by(.id) | last // empty' <<< "$releases")"
+          if test -n "$release"; then
             if test "$(jq -r .draft <<< "$release")" != true; then
               echo '::error::This version is already published; increase VERSION.txt. Published installers are never overwritten.'
               exit 1
@@ -52,7 +54,9 @@ jobs:
               echo "::error title=Release creation failed::${creation//$'\n'/'%0A'}"
               exit 1
             fi
-            release="$(gh api "repos/$RELEASE_REPOSITORY/releases/tags/$tag")"
+            releases="$(gh api "repos/$RELEASE_REPOSITORY/releases?per_page=100")"
+            release="$(jq -c --arg tag "$tag" '[.[] | select(.tag_name == $tag)] | sort_by(.id) | last // empty' <<< "$releases")"
+            test -n "$release"
           fi
           actual_hash="$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .digest' <<< "$release")"
           actual_size="$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .size' <<< "$release")"
