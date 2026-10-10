@@ -26,27 +26,31 @@ SHA-256 digest if needed. Do not bypass your hospital's security policies.
 
 ## Activate and renew
 
-OrthoVision requires a valid license before the viewer and LAN receiver
-start. No internet connection is needed for activation or capture.
+OrthoVision opens its dashboard directly. Without a valid license, a
+frosted-glass blur locks the image area and operational controls are disabled.
+The LAN receiver and updater stay off. Window controls and Settings remain
+available. No internet connection is needed for activation or capture.
 
-1. On **Activate OrthoVision**, select a physical Ethernet/Wi-Fi adapter and click
+1. Open **Settings > License**. Select a physical Ethernet/Wi-Fi adapter and click
    **Copy device MAC**. Send that MAC address to your administrator.
 2. The administrator issues a signed license for this device and an agreed end
    date, or a lifetime license. Paste the complete compact `OVL2.…` code and
    select **Activate**. Existing `OVL1.…` licenses continue to work.
 3. The app stores the accepted license for future launches. An invalid,
-   different-device, or expired code keeps the startup activation screen open.
-   A saved valid code opens the normal viewer directly, without showing the form
-   every time. MAC discovery now uses a direct local Windows API for fast startup.
+   different-device, or expired code leaves the dashboard locked and displays an
+   error in the License panel. A correct code immediately unlocks the viewer and
+   starts capture; no restart is required for first activation. A saved valid code
+   unlocks automatically on later launches, without a popup or separate screen.
+   MAC discovery uses a direct local Windows API for fast startup.
 4. If 30 days or less remain at startup, a persistent top banner asks you to
    contact support. It does not cover the image or interrupt capture.
 5. To renew, obtain a replacement code, close the app **after the procedure**,
    and restart. If the saved code has expired, enter the replacement on the
-   activation screen. To replace a still-valid code early, close OrthoVision,
+   License panel in Settings. To replace a still-valid code early, close OrthoVision,
    remove only `%APPDATA%\OrthoVision\OrthoVision\license.txt`, then reopen and
    enter the replacement. Do not remove capture files or other settings.
 
-**Licensing is startup-only:** once the viewer opens, expiry during that session
+**Licensing is startup/pre-activation only:** once the viewer is unlocked, expiry during that session
 never locks the screen, blocks reception, or closes the app. The next launch
 checks the license again. The banner's day count is a startup snapshot, rounded
 up. The administrator's end date is inclusive in UTC. Keep Windows date/time
@@ -56,8 +60,9 @@ Prefer the adapter's **hardware** MAC when requesting a license. Version 1.0.3
 also recognizes permanent hardware addresses to reduce Wi-Fi randomization issues.
 
 Open **Settings > License** (shield icon) for the device MAC, license ID, and
-valid-through date or **Lifetime license · No expiry**. This is read-only session
-information; opening Settings does not rerun validation or interrupt capture.
+valid-through date or **Lifetime license · No expiry**. Before activation this
+panel accepts a code; after activation it is read-only session information.
+Opening Settings does not rerun validation or interrupt capture.
 Lifetime licenses never show an expiry warning. New compact/lifetime codes
 require v1.0.3 or later, while your existing dated v1.0.2 codes remain supported.
 
