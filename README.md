@@ -10,7 +10,7 @@ This is the official **installer distribution repository**. Application source i
 maintained privately. Installers include the compiled app, its runtime files,
 and the Microsoft-signed Visual C++ x64 prerequisite—not the Flutter project.
 The current installer is visible directly in the repository root, not inside a
-folder. [Download OrthoVision v1.0.2](https://github.com/Sa3d-99/OrthoVision_/releases/download/v1.0.2/OrthoVision-Setup-1.0.2.exe).
+folder. [Download OrthoVision v1.0.3](https://github.com/Sa3d-99/OrthoVision_/releases/download/v1.0.3/OrthoVision-Setup-1.0.3.exe).
 
 ## Install
 
@@ -26,15 +26,18 @@ SHA-256 digest if needed. Do not bypass your hospital's security policies.
 
 ## Activate and renew
 
-OrthoVision v1.0.2 requires a valid license before the viewer and LAN receiver
+OrthoVision requires a valid license before the viewer and LAN receiver
 start. No internet connection is needed for activation or capture.
 
 1. On **Activate OrthoVision**, select a physical Ethernet/Wi-Fi adapter and click
    **Copy device MAC**. Send that MAC address to your administrator.
 2. The administrator issues a signed license for this device and an agreed end
-   date. Paste the complete `OVL1.…` code and select **Activate**.
+   date, or a lifetime license. Paste the complete compact `OVL2.…` code and
+   select **Activate**. Existing `OVL1.…` licenses continue to work.
 3. The app stores the accepted license for future launches. An invalid,
    different-device, or expired code keeps the startup activation screen open.
+   A saved valid code opens the normal viewer directly, without showing the form
+   every time. MAC discovery now uses a direct local Windows API for fast startup.
 4. If 30 days or less remain at startup, a persistent top banner asks you to
    contact support. It does not cover the image or interrupt capture.
 5. To renew, obtain a replacement code, close the app **after the procedure**,
@@ -49,6 +52,14 @@ checks the license again. The banner's day count is a startup snapshot, rounded
 up. The administrator's end date is inclusive in UTC. Keep Windows date/time
 correct. MAC changes (including Wi-Fi randomization or adapter replacement) can
 require a new license; an unplugged licensed adapter can still be recognized.
+Prefer the adapter's **hardware** MAC when requesting a license. Version 1.0.3
+also recognizes permanent hardware addresses to reduce Wi-Fi randomization issues.
+
+Open **Settings > License** (shield icon) for the device MAC, license ID, and
+valid-through date or **Lifetime license · No expiry**. This is read-only session
+information; opening Settings does not rerun validation or interrupt capture.
+Lifetime licenses never show an expiry warning. New compact/lifetime codes
+require v1.0.3 or later, while your existing dated v1.0.2 codes remain supported.
 
 ## Review images
 

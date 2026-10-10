@@ -1,5 +1,5 @@
-﻿# OrthoVision v1.0.2
+﻿# OrthoVision v1.0.3
 
-v1.0.2 introduces offline RSA-3072 device-bound activation, startup-only license validation, and a persistent non-blocking renewal warning for licenses expiring within 30 days. Active viewer sessions are never interrupted by license expiry. The public key only is bundled; signing tools and the private key remain owner-only. Existing updater-enabled v1.0.1 installations can choose Update now to upgrade and restart into activation. Captures and preferences are preserved. The unlicensed v1.0.1 release is retired only after this installer is verified and published.
+Fast local startup licensing using the Windows native hardware inventory API instead of PowerShell. Saved valid licenses open the normal viewer; read-only License details are now in Settings. New compact RSA-3072 activation codes are 558 characters (about 31% shorter than the original one-year example), and the owner Keygen supports signed lifetime licenses. Existing OVL1 licenses remain supported without key rotation. License validation remains startup-only; an active viewer is never interrupted by expiry, and dated licenses retain the non-blocking 30-day warning. Smaller app-logo decodes reduce startup image memory. Windows installer and native startup/close checks passed; 62 automated tests passed. No private keys or application source are included.
 
 Only the Windows installer is distributed here; app source is private. Image discovery requires a compatible export bridge, not just a LAN cable. No real C-arm integration has been validated.
