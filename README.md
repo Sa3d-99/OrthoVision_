@@ -10,11 +10,11 @@ This is the official **installer distribution repository**. Application source i
 maintained privately. Installers include the compiled app, its runtime files,
 and the Microsoft-signed Visual C++ x64 prerequisite—not the Flutter project.
 The current installer is visible directly in the repository root, not inside a
-folder. [Download OrthoVision v1.0.3](https://github.com/Sa3d-99/OrthoVision_/releases/download/v1.0.3/OrthoVision-Setup-1.0.3.exe).
+folder. [Download OrthoVision v1.0.4](https://github.com/Sa3d-99/OrthoVision_/releases/download/v1.0.4/OrthoVision-Setup.exe).
 
 ## Install
 
-1. Open **Releases** and download `OrthoVision-Setup-<version>.exe`.
+1. Open **Releases** and download `OrthoVision-Setup.exe`.
 2. Run Setup on Windows 10/11 x64 and approve Windows administrator permission.
 3. Launch OrthoVision from the Start menu or optional desktop shortcut.
 4. Activate with a device-bound license from your OrthoVision administrator.
@@ -23,6 +23,10 @@ Setup installs the app and checks its Visual C++ runtime dependency. The app
 installer itself is not Authenticode-signed; Windows may display a publisher or
 SmartScreen warning. Download only from this repository and check the published
 SHA-256 digest if needed. Do not bypass your hospital's security policies.
+
+The main installer is always `OrthoVision-Setup.exe`; the version is shown in
+its properties and the app's bottom footer. Releases also contain an identical
+version-named compatibility asset so older installed updaters can find the update.
 
 ## Activate and renew
 
@@ -72,7 +76,14 @@ require v1.0.3 or later, while your existing dated v1.0.2 codes remain supported
   compatible image-export bridges. Click **Connect** beside a compatible bridge;
   its TCP image port is detected automatically.
 - **LAN preview:** receive exported PNG/JPEG/BMP/WebP captures and display the
-  strongest technical-quality frame from each capture burst.
+  strongest technical-quality frame from each capture burst. Noise-aware scoring
+  discounts pixel noise; Best changes only for a meaningful score improvement.
+- **Best / Latest:** hold the suggested Best or view every incoming frame live,
+  including weaker ones. Latest is not a capture-history archive. Metrics and
+  Manual Save apply to the image on screen; original pixels are unchanged.
+- **Connection badge:** LAN READY means the local receiver has a LAN address and
+  is listening. SENDER CONNECTED means a TCP sender session is active. Returning
+  to LAN READY between individual captures is normal, not a transfer failure.
 - **Local receiver IP / Setup Guide:** read the laptop's active IPv4 address and
   listening port below the header. Copy IP/port, refresh after connecting a cable,
   or choose another active interface from the dark, step-by-step guide.
@@ -85,6 +96,7 @@ require v1.0.3 or later, while your existing dated v1.0.2 codes remain supported
 - **Settings:** choose a persistent capture folder and view update status.
 - **Window controls:** minimize, maximize/restore, or close with graceful worker
   shutdown. The layout adapts to the window size.
+- **Installed version:** shown in the bottom footer; the current release is v1.0.4.
 
 ## Network compatibility — read before connecting
 

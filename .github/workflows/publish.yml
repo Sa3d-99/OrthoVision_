@@ -3,7 +3,7 @@ name: Publish Windows installer
 on:
   push:
     branches: [main]
-    paths: [VERSION.txt, SHA256SUMS, 'OrthoVision-Setup-*.exe', '.github/workflows/publish.yml']
+    paths: [VERSION.txt, SHA256SUMS, 'OrthoVision-Setup*.exe', '.github/workflows/publish.yml']
   workflow_dispatch:
 
 permissions:
@@ -33,7 +33,8 @@ jobs:
           version="$(tr -d '\r\n' < VERSION.txt)"
           [[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
           tag="v$version"
-          name="OrthoVision-Setup-$version.exe"
+          name='OrthoVision-Setup.exe'
+          legacy_name="OrthoVision-Setup-$version.exe"
           installer="$name"
           test -f "$installer"
           sha256sum --check SHA256SUMS
@@ -46,11 +47,16 @@ jobs:
           replace_id=''
           if test -n "$published"; then
             current_hash="$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .digest' <<< "$published")"
+            if test -z "$current_hash"; then
+              current_hash="$(jq -r --arg name "$legacy_name" '.assets[] | select(.name == $name) | .digest' <<< "$published")"
+            fi
             if test "$current_hash" != "sha256:$expected_hash"; then
               test -f REPLACE_RELEASE.txt
-            old_hash="$(tr -d '\r\n' < REPLACE_RELEASE.txt)"
-            [[ "$old_hash" =~ ^[a-f0-9]{64}$ ]]
-              test "$(jq '.assets | length' <<< "$published")" = 1
+              old_hash="$(tr -d '\r\n' < REPLACE_RELEASE.txt)"
+              [[ "$old_hash" =~ ^[a-f0-9]{64}$ ]]
+              test "$(jq '.assets | length' <<< "$published")" -ge 1
+              test "$(jq '.assets | length' <<< "$published")" -le 2
+              test "$(jq -r --arg name "$name" --arg legacy "$legacy_name" --arg hash "sha256:$old_hash" 'all(.assets[]; (.name == $name or .name == $legacy) and .digest == $hash)' <<< "$published")" = true
               test "$current_hash" = "sha256:$old_hash"
               replace_id="$(jq -r .id <<< "$published")"
               [[ "$replace_id" =~ ^[0-9]+$ ]]
@@ -69,7 +75,14 @@ jobs:
           release_id="$(jq -r .id <<< "$release")"
           [[ "$release_id" =~ ^[0-9]+$ ]]
           test "$(jq -r .tag_name <<< "$release")" = "$tag"
-          test "$(jq '.assets | length' <<< "$release")" = 1
+          # v1.0.3 and earlier require a version-named asset. The public root and
+          # primary download stay clean; both release assets are identical.
+          if test "$(jq -r --arg name "$legacy_name" 'any(.assets[]; .name == $name)' <<< "$release")" = false; then
+            gh api --method POST "https://uploads.github.com/repos/$RELEASE_REPOSITORY/releases/$release_id/assets?name=$legacy_name" --input "$installer" -H 'Content-Type: application/octet-stream' --silent
+            release="$(gh api "repos/$RELEASE_REPOSITORY/releases/$release_id")"
+          fi
+          test "$(jq '.assets | length' <<< "$release")" = 2
+          test "$(jq -r --arg name "$name" --arg legacy "$legacy_name" --arg hash "sha256:$expected_hash" --argjson size "$expected_size" 'all(.assets[]; (.name == $name or .name == $legacy) and .digest == $hash and .size == $size)' <<< "$release")" = true
           actual_hash="$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .digest' <<< "$release")"
           actual_size="$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .size' <<< "$release")"
           echo "::notice::Uploaded SHA-256: $actual_hash; expected sha256:$expected_hash; uploaded size $actual_size; expected $expected_size"
