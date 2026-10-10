@@ -10,18 +10,45 @@ This is the official **installer distribution repository**. Application source i
 maintained privately. Installers include the compiled app, its runtime files,
 and the Microsoft-signed Visual C++ x64 prerequisite—not the Flutter project.
 The current installer is visible directly in the repository root, not inside a
-folder. [Download OrthoVision v1.0.1](https://github.com/Sa3d-99/OrthoVision_/releases/download/v1.0.1/OrthoVision-Setup-1.0.1.exe).
+folder. [Download OrthoVision v1.0.2](https://github.com/Sa3d-99/OrthoVision_/releases/download/v1.0.2/OrthoVision-Setup-1.0.2.exe).
 
 ## Install
 
 1. Open **Releases** and download `OrthoVision-Setup-<version>.exe`.
 2. Run Setup on Windows 10/11 x64 and approve Windows administrator permission.
 3. Launch OrthoVision from the Start menu or optional desktop shortcut.
+4. Activate with a device-bound license from your OrthoVision administrator.
 
 Setup installs the app and checks its Visual C++ runtime dependency. The app
 installer itself is not Authenticode-signed; Windows may display a publisher or
 SmartScreen warning. Download only from this repository and check the published
 SHA-256 digest if needed. Do not bypass your hospital's security policies.
+
+## Activate and renew
+
+OrthoVision v1.0.2 requires a valid license before the viewer and LAN receiver
+start. No internet connection is needed for activation or capture.
+
+1. On **Activate OrthoVision**, select a physical Ethernet/Wi-Fi adapter and click
+   **Copy device MAC**. Send that MAC address to your administrator.
+2. The administrator issues a signed license for this device and an agreed end
+   date. Paste the complete `OVL1.…` code and select **Activate**.
+3. The app stores the accepted license for future launches. An invalid,
+   different-device, or expired code keeps the startup activation screen open.
+4. If 30 days or less remain at startup, a persistent top banner asks you to
+   contact support. It does not cover the image or interrupt capture.
+5. To renew, obtain a replacement code, close the app **after the procedure**,
+   and restart. If the saved code has expired, enter the replacement on the
+   activation screen. To replace a still-valid code early, close OrthoVision,
+   remove only `%APPDATA%\OrthoVision\OrthoVision\license.txt`, then reopen and
+   enter the replacement. Do not remove capture files or other settings.
+
+**Licensing is startup-only:** once the viewer opens, expiry during that session
+never locks the screen, blocks reception, or closes the app. The next launch
+checks the license again. The banner's day count is a startup snapshot, rounded
+up. The administrator's end date is inclusive in UTC. Keep Windows date/time
+correct. MAC changes (including Wi-Fi randomization or adapter replacement) can
+require a new license; an unplugged licensed adapter can still be recognized.
 
 ## Review images
 
@@ -98,17 +125,17 @@ if a Windows restart is necessary, the app explains this instead of reopening.
 Finish the
 procedure and save needed images before updating. Upgrades preserve settings and
 saved captures. Builds made before this repository was configured may need a
-one-time manual installation of v1.0.1 to use this update feed.
-This v1.0.1 release was replaced at the owner's request before distribution. A PC
-already running the earlier v1.0.1 build must reinstall once: updates compare
-version numbers and do not replace equal versions. Later higher-version releases
-use the in-app update-and-restart flow above.
+one-time manual installation of the latest release to use this update feed.
+An installed updater-enabled v1.0.1 can update to v1.0.2 using **Update now**;
+activation is required when the new build restarts. The unlicensed v1.0.1 release
+and installer have been retired from current downloads. Copies previously
+downloaded or available through Git history cannot be revoked remotely.
 
 ## Uninstall
 
 Use Windows **Installed apps** or **Uninstall OrthoVision** in the Start menu.
 The uninstaller removes installed program files, shortcuts, registration, and
-known settings for the uninstalling Windows account. Saved X-ray captures,
+known settings and the saved license for the uninstalling Windows account. Saved X-ray captures,
 imported originals, untracked user files, and the shared Visual C++ runtime are
 preserved. Delete retained patient images separately only under your retention
 and privacy policy.

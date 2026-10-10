@@ -1,5 +1,5 @@
-﻿# OrthoVision v1.0.1
+﻿# OrthoVision v1.0.2
 
-Updated v1.0.1: live active laptop IPv4 and receiver port display, copy controls, interface selection and refresh, and a dark OSCAR/ZENIS Setup Guide. Update now downloads and verifies in-app, closes safely, applies the update silently without a Setup wizard, then reopens OrthoVision; Windows administrator approval may be required. Source stays private. This owner-authorized replacement of v1.0.1 requires a one-time reinstall only for PCs already using the previous v1.0.1 binary; future higher versions update in-app. ZENIS DICOM requires an approved image-export bridge; automatic pedal export and real C-arm integration are not validated.
+v1.0.2 introduces offline RSA-3072 device-bound activation, startup-only license validation, and a persistent non-blocking renewal warning for licenses expiring within 30 days. Active viewer sessions are never interrupted by license expiry. The public key only is bundled; signing tools and the private key remain owner-only. Existing updater-enabled v1.0.1 installations can choose Update now to upgrade and restart into activation. Captures and preferences are preserved. The unlicensed v1.0.1 release is retired only after this installer is verified and published.
 
 Only the Windows installer is distributed here; app source is private. Image discovery requires a compatible export bridge, not just a LAN cable. No real C-arm integration has been validated.

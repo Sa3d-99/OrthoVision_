@@ -89,4 +89,24 @@ jobs:
           latest="$(gh api "repos/$RELEASE_REPOSITORY/releases/latest")"
           test "$(jq -r .id <<< "$latest")" = "$release_id"
           test "$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .digest' <<< "$latest")" = "sha256:$expected_hash"
+          # One-time, owner-authorized retirement. Never remove the old release
+          # until the new licensed installer is published AND verified as latest.
+          if test -f REMOVE_RELEASE.txt; then
+            test "$version" = '1.0.2'
+            read -r retired_tag retired_hash < <(tr -d '\r' < REMOVE_RELEASE.txt)
+            test "$retired_tag" = 'v1.0.1'
+            [[ "$retired_hash" =~ ^[a-f0-9]{64}$ ]]
+            test ! -f 'OrthoVision-Setup-1.0.1.exe'
+            retired="$(jq -c '[.[] | select(.tag_name == "v1.0.1" and .draft == false)] | sort_by(.id) | last // empty' <<< "$releases")"
+            if test -n "$retired"; then
+              retired_id="$(jq -r .id <<< "$retired")"
+              [[ "$retired_id" =~ ^[0-9]+$ ]]
+              test "$retired_id" != "$release_id"
+              test "$(jq '.assets | length' <<< "$retired")" = 1
+              test "$(jq -r '.assets[0].name' <<< "$retired")" = 'OrthoVision-Setup-1.0.1.exe'
+              test "$(jq -r '.assets[0].digest' <<< "$retired")" = "sha256:$retired_hash"
+              gh api --method DELETE "repos/$RELEASE_REPOSITORY/releases/$retired_id"
+              echo 'Retired the exact authorized unlicensed v1.0.1 release.' >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
           printf 'Published verified installer: https://github.com/%s/releases/tag/%s\n' "$RELEASE_REPOSITORY" "$tag" >> "$GITHUB_STEP_SUMMARY"
