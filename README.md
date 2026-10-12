@@ -10,7 +10,7 @@ This is the official **installer distribution repository**. Application source i
 maintained privately. Installers include the compiled app, its runtime files,
 and the Microsoft-signed Visual C++ x64 prerequisite—not the Flutter project.
 The current installer is visible directly in the repository root, not inside a
-folder. [Download OrthoVision v1.0.5](https://github.com/Sa3d-99/OrthoVision_/releases/download/v1.0.5/OrthoVision-Setup.exe).
+folder. [Download OrthoVision v1.0.6](https://github.com/Sa3d-99/OrthoVision_/releases/download/v1.0.6/OrthoVision-Setup.exe).
 
 ## Install
 
@@ -78,6 +78,11 @@ require v1.0.3 or later, while your existing dated v1.0.2 codes remain supported
 - **LAN preview:** receive exported PNG/JPEG/BMP/WebP captures and display the
   strongest technical-quality frame from each capture burst. Noise-aware scoring
   discounts pixel noise; Best changes only for a meaningful score improvement.
+  v1.0.6 excludes black/white perimeter background and peripheral labels from
+  scoring, checks native-resolution grain, and strengthens blur/clipping/blank
+  penalties. Original images are never cropped or modified. Corrupt frames cannot
+  replace Best, and LAN ranking restarts after a local import. These are technical
+  suggestions, not a clinically validated quality judgment; the clinician chooses.
 - **Best / Latest:** hold the suggested Best or view every incoming frame live,
   including weaker ones. Latest is not a capture-history archive. Metrics and
   Manual Save apply to the image on screen; original pixels are unchanged.
@@ -107,7 +112,7 @@ require v1.0.3 or later, while your existing dated v1.0.2 codes remain supported
 - **Settings:** choose a persistent capture folder and view update status.
 - **Window controls:** minimize, maximize/restore, or close with graceful worker
   shutdown. The layout adapts to the window size.
-- **Installed version:** shown in the bottom footer; the current release is v1.0.5.
+- **Installed version:** shown in the bottom footer; the current release is v1.0.6.
 
 ## Network compatibility — read before connecting
 
