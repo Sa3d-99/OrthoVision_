@@ -10,7 +10,7 @@ This is the official **installer distribution repository**. Application source i
 maintained privately. Installers include the compiled app, its runtime files,
 and the Microsoft-signed Visual C++ x64 prerequisite—not the Flutter project.
 The current installer is visible directly in the repository root, not inside a
-folder. [Download OrthoVision v1.0.4](https://github.com/Sa3d-99/OrthoVision_/releases/download/v1.0.4/OrthoVision-Setup.exe).
+folder. [Download OrthoVision v1.0.5](https://github.com/Sa3d-99/OrthoVision_/releases/download/v1.0.5/OrthoVision-Setup.exe).
 
 ## Install
 
@@ -85,7 +85,7 @@ require v1.0.3 or later, while your existing dated v1.0.2 codes remain supported
   is listening. SENDER CONNECTED means a TCP sender session is active. Returning
   to LAN READY between individual captures is normal, not a transfer failure.
 - **Local receiver IP / Setup Guide:** read the laptop's active IPv4 address and
-  listening port below the header. Copy IP/port, refresh after connecting a cable,
+  listening port in the integrated title bar. Copy IP/port, refresh after connecting a cable,
   or choose another active interface from the dark, step-by-step guide.
 - **Auto Save:** turn automatic retention on or off. Only the top 10 ranked
   automatic captures are retained; weaker automatic captures are deleted.
@@ -93,10 +93,21 @@ require v1.0.3 or later, while your existing dated v1.0.2 codes remain supported
   not removed by the automatic top-10 limit.
 - **Open Image:** import a supported local image for review.
 - **Brightness:** adjust the preview without modifying source pixels or saves.
+- **Positive / Negative:** switch original or inverted display polarity; saved
+  captures always keep their original pixels.
+- **Zoom / pan / Reset view:** zoom from 50% to 400%, drag to pan, or reset zoom,
+  polarity and brightness together.
+- **Full screen:** fill the monitor with the image viewer, hiding the workspace
+  header, footer and side panels. Exit full screen or Escape restores the window;
+  zoom and pan are preserved. F11 toggles full screen. Close and any license renewal warning stay available.
+- **Dark glass workspace:** frosted translucent panels without decorative overline
+  labels, integrated draggable title bar, outline controls,
+  and brief reduced-motion-aware transitions. Latest remains immediate during
+  rapid image arrival; saved files, licensing and the receiver are unchanged.
 - **Settings:** choose a persistent capture folder and view update status.
 - **Window controls:** minimize, maximize/restore, or close with graceful worker
   shutdown. The layout adapts to the window size.
-- **Installed version:** shown in the bottom footer; the current release is v1.0.4.
+- **Installed version:** shown in the bottom footer; the current release is v1.0.5.
 
 ## Network compatibility — read before connecting
 
